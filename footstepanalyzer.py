@@ -72,7 +72,6 @@ def main():
                         pos = tuple([int(d) for d in [x * width, y * height]])
                         pos_log.append(pos)
 
-
                         # delete log
                         if len(pos_log) > 5000:
                             pos_log = pos_log[-1000:]
@@ -100,14 +99,14 @@ def main():
 
                         # draw point
                         for pos in pos_log[-300:]:
-                            pygame.draw.circle(screen, white + ( 128,), pos, 5)
+                            pygame.draw.circle(screen, white + (128,), pos, 5)
 
                         # update frame
                         pygame.display.flip()
                 # etc for topRight, bottomRight, bottomLeft. buttonPressed and buttonReleased also available but easier to use in seperate event
 
                 elif event.type == wiiboard.WIIBOARD_BUTTON_PRESS:
-                    print "Button pressed!"
+                    print("Button pressed!")
                     screen.fill(black)
                     pygame.display.flip()
                     step_count = 0
@@ -117,7 +116,7 @@ def main():
                     f.write('\n')
 
                 elif event.type == wiiboard.WIIBOARD_BUTTON_RELEASE:
-                    print "Button released"
+                    print("Button released")
                     # done = True
 
                 # Other event types:
