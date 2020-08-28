@@ -117,7 +117,8 @@ def main():
 
                 elif event.type == wiiboard.WIIBOARD_BUTTON_RELEASE:
                     print("Button released")
-                    # done = True
+                elif event.type == pygame.QUIT:
+                    done = True
 
                 # Other event types:
                 # wiiboard.WIIBOARD_CONNECTED
