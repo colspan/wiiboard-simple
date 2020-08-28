@@ -5,12 +5,11 @@ More information at http://code.google.com/p/wiiboard-simple/
 '''
 
 import bluetooth
-import sys
 
 try:
-	import thread
+    import thread
 except:
-	import _thread as thread
+    import _thread as thread
 
 import time
 import pygame
@@ -79,8 +78,8 @@ class Wiiboard:
                 # high dummy value so events with it don't register
                 self.calibration[i].append(10000)
 
-                self.status = "Disconnected"
-                self.lastEvent = BoardEvent(0, 0, 0, 0, False, False)
+        self.status = "Disconnected"
+        self.lastEvent = BoardEvent(0, 0, 0, 0, False, False)
 
         try:
             self.receivesocket = bluetooth.BluetoothSocket(bluetooth.L2CAP)
@@ -96,13 +95,13 @@ class Wiiboard:
 
     # Connect to the Wiiboard at bluetooth address <address>
     def connect(self, address):
-        if address == None:
+        if address is None:
             print("Non existant address")
             return
         self.receivesocket.connect((address, 0x13))
         self.controlsocket.connect((address, 0x11))
         if self.receivesocket and self.controlsocket:
-            print("Connected to Wiiboard at address " + address)
+            print("Connected to Wiiboard at address {}".format(address))
             self.status = "Connected"
             self.address = address
             thread.start_new_thread(self.receivethread, ())
@@ -112,7 +111,7 @@ class Wiiboard:
             self.setReportingType()
             pygame.event.post(pygame.event.Event(WIIBOARD_CONNECTED))
         else:
-            print("Could not connect to Wiiboard at address " + address)
+            print("Could not connect to Wiiboard at address {}".format(address))
 
     # Disconnect from the Wiiboard
     def disconnect(self):
@@ -136,8 +135,8 @@ class Wiiboard:
         for bluetoothdevice in bluetoothdevices:
             if bluetoothdevice[1] == BLUETOOTH_NAME:
                 address = bluetoothdevice[0]
-                print("Found Wiiboard at address " + address)
-        if address == None:
+                print("Found Wiiboard at address {}".format(address))
+        if address is None:
             print("No Wiiboards discovered.")
         return address
 
@@ -147,8 +146,7 @@ class Wiiboard:
         buttonPressed = False
         buttonReleased = False
 
-        state = (int(hex(buttonBytes[0]), 16) << 8) | int(
-            hex(buttonBytes[1]), 16)
+        state = (buttonBytes[0] << 8) | buttonBytes[1]
         if state == BUTTON_DOWN_MASK:
             buttonPressed = True
             if not self.buttonDown:
@@ -156,19 +154,15 @@ class Wiiboard:
                 self.buttonDown = True
 
         if buttonPressed == False:
-            if self.lastEvent.buttonPressed == True:
+            if self.lastEvent.buttonPressed:
                 buttonReleased = True
                 self.buttonDown = False
                 pygame.event.post(pygame.event.Event(WIIBOARD_BUTTON_RELEASE))
 
-        rawTR = (bytes[0] << 8) + \
-            bytes[1]
-        rawBR = (bytes[2] << 8) + \
-            bytes[3]
-        rawTL = (bytes[4] << 8) + \
-            bytes[5]
-        rawBL = (bytes[6] << 8) + \
-            bytes[7]
+        rawTR = (bytes[0] << 8) + bytes[1]
+        rawBR = (bytes[2] << 8) + bytes[3]
+        rawTL = (bytes[4] << 8) + bytes[5]
+        rawBL = (bytes[6] << 8) + bytes[7]
 
         topLeft = self.calcMass(rawTL, TOP_LEFT)
         topRight = self.calcMass(rawTR, TOP_RIGHT)
@@ -215,7 +209,7 @@ class Wiiboard:
                     # TODO: Status input received. It just tells us battery life really
                     self.setReportingType()
                 elif intype == INPUT_READ_DATA:
-                    if self.calibrationRequested == True:
+                    if self.calibrationRequested:
                         packetLength = int(data[4]/16 + 1)
                         self.parseCalibrationResponse(data[7:(7+packetLength)])
 
@@ -239,7 +233,8 @@ class Wiiboard:
         if len(bytes) == 16:
             for i in range(2):
                 for j in range(4):
-                    self.calibration[i][j] = (bytes[index] << 8) + bytes[index+1]
+                    self.calibration[i][j] = (
+                        bytes[index] << 8) + bytes[index+1]
                     index += 2
         elif len(bytes) < 16:
             for i in range(4):
@@ -262,7 +257,7 @@ class Wiiboard:
     # The board must be connected in order to set the light
     def setLight(self, light):
         val = "00"
-        if light == True:
+        if light:
             val = "10"
 
         message = ["00", COMMAND_LIGHT, val]

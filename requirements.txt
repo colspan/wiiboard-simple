@@ -1,2 +1,2 @@
-pybluez==0.22
+pybluez
 pygame

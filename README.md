@@ -1,3 +1,5 @@
-# wiiboard-simple
+# wiiboard-simple for Python 3
 
-Fork of [wiiboard-simple](https://code.google.com/archive/p/wiiboard-simple/).
+Fork of [Python 2 version](https://github.com/pvazteixeira/wiiboard-simple).
+
+Original is [wiiboard-simple](https://code.google.com/archive/p/wiiboard-simple/).

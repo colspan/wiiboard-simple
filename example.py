@@ -2,40 +2,44 @@ import wiiboard
 import pygame
 import time
 
+
 def main():
-	board = wiiboard.Wiiboard()
+    board = wiiboard.Wiiboard()
 
-	pygame.init()
-	
-	address = board.discover()
-	board.connect(address) #The wii board must be in sync mode at this time
+    pygame.init()
 
-	time.sleep(0.1)
-	board.setLight(True)
-	done = False
+    address = board.discover()
+    board.connect(address)  # The wii board must be in sync mode at this time
 
-	while (not done):
-		time.sleep(0.05)
-		for event in pygame.event.get():
-			if event.type == wiiboard.WIIBOARD_MASS:
-				if (event.mass.totalWeight > 10):   #10KG. otherwise you would get alot of useless small events!
-					print "--Mass event--   Total weight: " + `event.mass.totalWeight` + ". Top left: " + `event.mass.topLeft`
-				#etc for topRight, bottomRight, bottomLeft. buttonPressed and buttonReleased also available but easier to use in seperate event
-				
-			elif event.type == wiiboard.WIIBOARD_BUTTON_PRESS:
-				print "Button pressed!"
+    time.sleep(0.1)
+    board.setLight(True)
+    done = False
 
-			elif event.type == wiiboard.WIIBOARD_BUTTON_RELEASE:
-				print "Button released"
-				done = True
-			
-			#Other event types:
-			#wiiboard.WIIBOARD_CONNECTED
-			#wiiboard.WIIBOARD_DISCONNECTED
+    while (not done):
+        time.sleep(0.05)
+        for event in pygame.event.get():
+            if event.type == wiiboard.WIIBOARD_MASS:
+                # 10KG. otherwise you would get alot of useless small events!
+                if (event.mass.totalWeight > 10):
+                    print("--Mass event--   Total weight: {}. Top left: {}".format(
+                        event.mass.totalWeight, event.mass.topLeft))
+                # etc for topRight, bottomRight, bottomLeft. buttonPressed and buttonReleased also available but easier to use in seperate event
 
-	board.disconnect()
-	pygame.quit()
+            elif event.type == wiiboard.WIIBOARD_BUTTON_PRESS:
+                print("Button pressed!")
 
-#Run the script if executed
+            elif event.type == wiiboard.WIIBOARD_BUTTON_RELEASE:
+                print("Button released")
+                done = True
+
+            # Other event types:
+            # wiiboard.WIIBOARD_CONNECTED
+            # wiiboard.WIIBOARD_DISCONNECTED
+
+    board.disconnect()
+    pygame.quit()
+
+
+# Run the script if executed
 if __name__ == "__main__":
-	main()
+    main()
