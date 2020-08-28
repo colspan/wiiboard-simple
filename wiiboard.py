@@ -5,6 +5,12 @@ More information at http://code.google.com/p/wiiboard-simple/
 '''
 
 import bluetooth
+
+try:
+    import thread
+except:
+    import _thread as thread
+
 import time
 import pygame
 
@@ -140,28 +146,23 @@ class Wiiboard:
         buttonPressed = False
         buttonReleased = False
 
-        state = (int(buttonBytes[0].encode("hex"), 16) << 8) | int(
-            buttonBytes[1].encode("hex"), 16)
+        state = (buttonBytes[0] << 8) | buttonBytes[1]
         if state == BUTTON_DOWN_MASK:
             buttonPressed = True
             if not self.buttonDown:
                 pygame.event.post(pygame.event.Event(WIIBOARD_BUTTON_PRESS))
                 self.buttonDown = True
 
-        if buttonPressed is False:
-            if self.lastEvent.buttonPressed is True:
+        if buttonPressed == False:
+            if self.lastEvent.buttonPressed:
                 buttonReleased = True
                 self.buttonDown = False
                 pygame.event.post(pygame.event.Event(WIIBOARD_BUTTON_RELEASE))
 
-        rawTR = (int(bytes[0].encode("hex"), 16) << 8) + \
-            int(bytes[1].encode("hex"), 16)
-        rawBR = (int(bytes[2].encode("hex"), 16) << 8) + \
-            int(bytes[3].encode("hex"), 16)
-        rawTL = (int(bytes[4].encode("hex"), 16) << 8) + \
-            int(bytes[5].encode("hex"), 16)
-        rawBL = (int(bytes[6].encode("hex"), 16) << 8) + \
-            int(bytes[7].encode("hex"), 16)
+        rawTR = (bytes[0] << 8) + bytes[1]
+        rawBR = (bytes[2] << 8) + bytes[3]
+        rawTL = (bytes[4] << 8) + bytes[5]
+        rawBL = (bytes[6] << 8) + bytes[7]
 
         topLeft = self.calcMass(rawTL, TOP_LEFT)
         topRight = self.calcMass(rawTR, TOP_RIGHT)
@@ -196,18 +197,20 @@ class Wiiboard:
     # Thread that listens for incoming data
     def receivethread(self):
         # try:
-        #	self.receivesocket.settimeout(0.1)       #not for windows?
+        #    self.receivesocket.settimeout(0.1)       #not for windows?
         while self.status == "Connected":
             if True:
                 data = self.receivesocket.recv(25)
-                intype = int(data.encode("hex")[2:4])
+                str_data = ''
+                for d in data:
+                    str_data += format(d, 'x')
+                intype = int(str_data[2:4])
                 if intype == INPUT_STATUS:
                     # TODO: Status input received. It just tells us battery life really
                     self.setReportingType()
                 elif intype == INPUT_READ_DATA:
-                    if self.calibrationRequested is True:
-                        packetLength = (
-                            int(str(data[4]).encode("hex"), 16)/16 + 1)
+                    if self.calibrationRequested:
+                        packetLength = int(data[4]/16 + 1)
                         self.parseCalibrationResponse(data[7:(7+packetLength)])
 
                         if packetLength < 16:
@@ -230,13 +233,12 @@ class Wiiboard:
         if len(bytes) == 16:
             for i in range(2):
                 for j in range(4):
-                    self.calibration[i][j] = (int(bytes[index].encode(
-                        "hex"), 16) << 8) + int(bytes[index+1].encode("hex"), 16)
+                    self.calibration[i][j] = (
+                        bytes[index] << 8) + bytes[index+1]
                     index += 2
         elif len(bytes) < 16:
             for i in range(4):
-                self.calibration[2][i] = (int(bytes[index].encode(
-                    "hex"), 16) << 8) + int(bytes[index+1].encode("hex"), 16)
+                self.calibration[2][i] = (bytes[index] << 8) + bytes[index+1]
                 index += 2
 
     # Send <data> to the Wiiboard
@@ -246,18 +248,16 @@ class Wiiboard:
             return
         data[0] = "52"
 
-        senddata = ""
+        senddata = b""
         for byte in data:
-            byte = str(byte)
-            senddata += byte.decode("hex")
-
+            senddata += bytes.fromhex(str(byte))
         self.controlsocket.send(senddata)
 
     # Turns the power button LED on if light is True, off if False
     # The board must be connected in order to set the light
     def setLight(self, light):
         val = "00"
-        if light is True:
+        if light:
             val = "10"
 
         message = ["00", COMMAND_LIGHT, val]
