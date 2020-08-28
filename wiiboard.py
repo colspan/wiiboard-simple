@@ -147,8 +147,8 @@ class Wiiboard:
         buttonPressed = False
         buttonReleased = False
 
-        state = (int(buttonBytes[0].encode("hex"), 16) << 8) | int(
-            buttonBytes[1].encode("hex"), 16)
+        state = (int(hex(buttonBytes[0]), 16) << 8) | int(
+            hex(buttonBytes[1]), 16)
         if state == BUTTON_DOWN_MASK:
             buttonPressed = True
             if not self.buttonDown:
@@ -161,14 +161,14 @@ class Wiiboard:
                 self.buttonDown = False
                 pygame.event.post(pygame.event.Event(WIIBOARD_BUTTON_RELEASE))
 
-        rawTR = (int(bytes[0].encode("hex"), 16) << 8) + \
-            int(bytes[1].encode("hex"), 16)
-        rawBR = (int(bytes[2].encode("hex"), 16) << 8) + \
-            int(bytes[3].encode("hex"), 16)
-        rawTL = (int(bytes[4].encode("hex"), 16) << 8) + \
-            int(bytes[5].encode("hex"), 16)
-        rawBL = (int(bytes[6].encode("hex"), 16) << 8) + \
-            int(bytes[7].encode("hex"), 16)
+        rawTR = (bytes[0] << 8) + \
+            bytes[1]
+        rawBR = (bytes[2] << 8) + \
+            bytes[3]
+        rawTL = (bytes[4] << 8) + \
+            bytes[5]
+        rawBL = (bytes[6] << 8) + \
+            bytes[7]
 
         topLeft = self.calcMass(rawTL, TOP_LEFT)
         topRight = self.calcMass(rawTR, TOP_RIGHT)
@@ -207,14 +207,16 @@ class Wiiboard:
         while self.status == "Connected":
             if True:
                 data = self.receivesocket.recv(25)
-                intype = int(data.encode("hex")[2:4])
+                str_data = ''
+                for d in data:
+                    str_data += format(d, 'x')
+                intype = int(str_data[2:4])
                 if intype == INPUT_STATUS:
                     # TODO: Status input received. It just tells us battery life really
                     self.setReportingType()
                 elif intype == INPUT_READ_DATA:
                     if self.calibrationRequested == True:
-                        packetLength = (
-                            int(str(data[4]).encode("hex"), 16)/16 + 1)
+                        packetLength = int(data[4]/16 + 1)
                         self.parseCalibrationResponse(data[7:(7+packetLength)])
 
                         if packetLength < 16:
@@ -237,13 +239,11 @@ class Wiiboard:
         if len(bytes) == 16:
             for i in range(2):
                 for j in range(4):
-                    self.calibration[i][j] = (int(bytes[index].encode(
-                        "hex"), 16) << 8) + int(bytes[index+1].encode("hex"), 16)
+                    self.calibration[i][j] = (bytes[index] << 8) + bytes[index+1]
                     index += 2
         elif len(bytes) < 16:
             for i in range(4):
-                self.calibration[2][i] = (int(bytes[index].encode(
-                    "hex"), 16) << 8) + int(bytes[index+1].encode("hex"), 16)
+                self.calibration[2][i] = (bytes[index] << 8) + bytes[index+1]
                 index += 2
 
     # Send <data> to the Wiiboard
@@ -253,11 +253,9 @@ class Wiiboard:
             return
         data[0] = "52"
 
-        senddata = ""
+        senddata = b""
         for byte in data:
-            byte = str(byte)
-            senddata += byte.decode("hex")
-
+            senddata += bytes.fromhex(str(byte))
         self.controlsocket.send(senddata)
 
     # Turns the power button LED on if light is True, off if False
